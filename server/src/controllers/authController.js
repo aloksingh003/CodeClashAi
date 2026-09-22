@@ -106,7 +106,38 @@ const login = async (req, res) => {
   }
 };
 
+const getMe = async (req, res) => {
+  res.status(200).json({
+    success: true,
+    user: {
+      id: req.user._id,
+      name: req.user.name,
+      username: req.user.username,
+      email: req.user.email,
+      rating: req.user.rating,
+      matchesPlayed: req.user.matchesPlayed,
+      wins: req.user.wins,
+      losses: req.user.losses,
+    },
+  });
+};
+
+const logout = async (req, res) => {
+  res.clearCookie("token", {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+  });
+
+  res.status(200).json({
+    success: true,
+    message: "Logout successful",
+  });
+};
+
 module.exports = {
   register,
   login,
+  getMe,
+  logout,
 };
