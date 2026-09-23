@@ -4,10 +4,13 @@ const http = require("http");
 
 const app = require("./app");
 const connectDB = require("./config/db");
+const initializeSocket = require("./sockets/socketHandler");
 
 const PORT = process.env.PORT || 5000;
 
 const server = http.createServer(app);
+
+initializeSocket(server);
 
 const startServer = async () => {
   try {
