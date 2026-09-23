@@ -3,8 +3,11 @@ const cors = require("cors");
 const helmet = require("helmet");
 const morgan = require("morgan");
 const cookieParser = require("cookie-parser");
+const battleRoutes = require("./routes/battleRoutes");
 
 const authRoutes = require("./routes/authRoutes");
+
+
 
 const app = express();
 
@@ -21,6 +24,8 @@ app.use(helmet());
 app.use(morgan("dev"));
 
 app.use("/api/auth", authRoutes);
+
+app.use("/api/battles", battleRoutes);
 
 app.get("/api/health", (req, res) => {
   res.status(200).json({
