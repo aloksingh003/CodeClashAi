@@ -52,10 +52,18 @@ function App() {
       setMessage("Battle room updated");
     };
 
+    const handleBattleStarted = (startedBattle) => {
+      setBattle(startedBattle);
+      setMessage("Battle started!");
+    };
+
     socket.on("connect", handleConnect);
     socket.on("disconnect", handleDisconnect);
     socket.on("connect_error", handleSocketError);
+
     socket.on("battle_room_updated", handleBattleUpdate);
+
+    socket.on("battle_started", handleBattleStarted);
 
     const checkAuthentication = async () => {
       try {
@@ -76,7 +84,10 @@ function App() {
       socket.off("connect", handleConnect);
       socket.off("disconnect", handleDisconnect);
       socket.off("connect_error", handleSocketError);
+
       socket.off("battle_room_updated", handleBattleUpdate);
+
+      socket.off("battle_started", handleBattleStarted);
     };
   }, []);
 
@@ -175,6 +186,21 @@ function App() {
     }
   };
 
+  const handleStartBattle = async () => {
+    setMessage("");
+
+    try {
+      const data = await apiRequest(`/battles/${battle.roomCode}/start`, {
+        method: "POST",
+      });
+
+      setBattle(data.battle);
+      setMessage(data.message);
+    } catch (error) {
+      setMessage(error.message);
+    }
+  };
+
   if (loading) {
     return <h2>Loading...</h2>;
   }
@@ -209,6 +235,8 @@ function App() {
       </main>
     );
   }
+
+  const isHost = battle && String(battle.players[0]?.user) === String(user.id);
 
   return (
     <main>
@@ -257,15 +285,68 @@ function App() {
             ))}
           </ul>
 
-          <p>
-            {battle.players.length < 2
-              ? "Waiting for opponent..."
-              : "Both players joined!"}
-          </p>
+          {battle.status === "waiting" && (
+            <>
+              <p>
+                {battle.players.length < 2
+                  ? "Waiting for opponent..."
+                  : "Both players joined!"}
+              </p>
+
+              {isHost ? (
+                <button
+                  onClick={handleStartBattle}
+                  disabled={battle.players.length !== 2}
+                >
+                  Start Battle
+                </button>
+              ) : (
+                <p>Waiting for host to start...</p>
+              )}
+            </>
+          )}
+
+          {battle.status === "active" && battle.problem && (
+            <section>
+              <h2>{battle.problem.title}</h2>
+
+              <p>Difficulty: {battle.problem.difficulty}</p>
+
+              <p>{battle.problem.description}</p>
+
+              <h3>Constraints</h3>
+
+              <ul>
+                {battle.problem.constraints.map((constraint, index) => (
+                  <li key={index}>{constraint}</li>
+                ))}
+              </ul>
+
+              <h3>Examples</h3>
+
+              {battle.problem.examples.map((example, index) => (
+                <div key={index}>
+                  <h4>Example {index + 1}</h4>
+                  <p>Input: {example.input}</p>
+                  <p>Output: {example.output}</p>
+
+                  {example.explanation && (
+                    <p>Explanation: {example.explanation}</p>
+                  )}
+                </div>
+              ))}
+
+              <h3>C++ Starter Code</h3>
+
+              <pre>
+                <code>{battle.problem.starterCode.cpp}</code>
+              </pre>
+            </section>
+          )}
+
+          {message && <p>{message}</p>}
         </section>
       )}
-
-      {message && <p>{message}</p>}
 
       <button onClick={handleLogout}>Logout</button>
     </main>
