@@ -48,6 +48,13 @@ const battleSchema = new mongoose.Schema(
       enum: ["waiting", "active", "completed"],
       default: "waiting",
     },
+
+    problem: {
+  type: mongoose.Schema.Types.ObjectId,
+  ref: "Problem",
+  default: null,
+   },
+
     winner: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
