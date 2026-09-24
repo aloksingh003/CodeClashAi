@@ -86,9 +86,7 @@ const [a, b] = input;
 
 const seedProblems = async () => {
   try {
-    await mongoose.connect(process.env.MONGO_URI, {
-      dbName: "codeclash",
-    });
+    await mongoose.connect(process.env.MONGO_URI);
 
     for (const problem of problems) {
       await Problem.findOneAndUpdate(
@@ -98,7 +96,7 @@ const seedProblems = async () => {
         problem,
         {
           upsert: true,
-          new: true,
+          returnDocument: "after",
           runValidators: true,
         }
       );

@@ -10,7 +10,8 @@ const PORT = process.env.PORT || 5000;
 
 const server = http.createServer(app);
 
-initializeSocket(server);
+const io = initializeSocket(server);
+app.set("io", io);
 
 const startServer = async () => {
   try {
