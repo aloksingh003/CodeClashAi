@@ -4,6 +4,7 @@ const helmet = require("helmet");
 const morgan = require("morgan");
 const cookieParser = require("cookie-parser");
 const battleRoutes = require("./routes/battleRoutes");
+const codeRoutes = require("./routes/codeRoutes");
 
 const authRoutes = require("./routes/authRoutes");
 
@@ -26,6 +27,8 @@ app.use(morgan("dev"));
 app.use("/api/auth", authRoutes);
 
 app.use("/api/battles", battleRoutes);
+
+app.use("/api/code", codeRoutes);
 
 app.get("/api/health", (req, res) => {
   res.status(200).json({
