@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import socket from "./socket";
+import CodeEditor from "./components/CodeEditor";
 import "./App.css";
 
 const API_URL = "http://localhost:5000/api";
@@ -33,6 +34,9 @@ function App() {
   const [roomCodeInput, setRoomCodeInput] = useState("");
   const [battle, setBattle] = useState(null);
 
+  const [language, setLanguage] = useState("cpp");
+  const [code, setCode] = useState("");
+
   useEffect(() => {
     const handleConnect = () => {
       setConnected(true);
@@ -54,6 +58,8 @@ function App() {
 
     const handleBattleStarted = (startedBattle) => {
       setBattle(startedBattle);
+      setLanguage("cpp");
+      setCode(startedBattle.problem?.starterCode?.cpp || "");
       setMessage("Battle started!");
     };
 
@@ -137,6 +143,8 @@ function App() {
       setUser(null);
       setBattle(null);
       setRoomCodeInput("");
+      setLanguage("cpp");
+      setCode("");
       setMessage(data.message);
     } catch (error) {
       setMessage(error.message);
@@ -195,6 +203,8 @@ function App() {
       });
 
       setBattle(data.battle);
+      setLanguage("cpp");
+      setCode(data.battle.problem?.starterCode?.cpp || "");
       setMessage(data.message);
     } catch (error) {
       setMessage(error.message);
@@ -336,11 +346,15 @@ function App() {
                 </div>
               ))}
 
-              <h3>C++ Starter Code</h3>
+              <h3>Code Editor</h3>
 
-              <pre>
-                <code>{battle.problem.starterCode.cpp}</code>
-              </pre>
+              <CodeEditor
+                starterCode={battle.problem.starterCode}
+                language={language}
+                setLanguage={setLanguage}
+                code={code}
+                setCode={setCode}
+              />
             </section>
           )}
 
