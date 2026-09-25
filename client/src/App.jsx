@@ -12,7 +12,6 @@ const apiRequest = async (path, options = {}) => {
   const response = await fetch(`${API_URL}${path}`, {
     credentials: "include",
     ...options,
-
     headers: {
       "Content-Type": "application/json",
       ...(options.headers || {}),
@@ -29,14 +28,14 @@ const apiRequest = async (path, options = {}) => {
 };
 
 function App() {
-  const [email, setEmail] = useState("aloktest01@example.com");
-
-  const [password, setPassword] = useState("test123");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
 
   const [user, setUser] = useState(null);
   const [connected, setConnected] = useState(false);
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState("");
+
   const [roomCodeInput, setRoomCodeInput] = useState("");
   const [battle, setBattle] = useState(null);
 
@@ -65,9 +64,7 @@ function App() {
     const handleBattleStarted = (startedBattle) => {
       setBattle(startedBattle);
       setLanguage("cpp");
-
       setCode(startedBattle.problem?.starterCode?.cpp || "");
-
       setMessage("Battle started!");
     };
 
@@ -91,11 +88,8 @@ function App() {
     socket.on("connect", handleConnect);
     socket.on("disconnect", handleDisconnect);
     socket.on("connect_error", handleSocketError);
-
     socket.on("battle_room_updated", handleBattleUpdate);
-
     socket.on("battle_started", handleBattleStarted);
-
     socket.on("battle_completed", handleBattleCompleted);
 
     const checkAuthentication = async () => {
@@ -117,11 +111,8 @@ function App() {
       socket.off("connect", handleConnect);
       socket.off("disconnect", handleDisconnect);
       socket.off("connect_error", handleSocketError);
-
       socket.off("battle_room_updated", handleBattleUpdate);
-
       socket.off("battle_started", handleBattleStarted);
-
       socket.off("battle_completed", handleBattleCompleted);
     };
   }, []);
@@ -148,7 +139,6 @@ function App() {
     try {
       const data = await apiRequest("/auth/login", {
         method: "POST",
-
         body: JSON.stringify({
           email,
           password,
@@ -176,6 +166,8 @@ function App() {
       setRoomCodeInput("");
       setLanguage("cpp");
       setCode("");
+      setEmail("");
+      setPassword("");
       setMessage(data.message);
     } catch (error) {
       setMessage(error.message);
@@ -235,9 +227,7 @@ function App() {
 
       setBattle(data.battle);
       setLanguage("cpp");
-
       setCode(data.battle.problem?.starterCode?.cpp || "");
-
       setMessage(data.message);
     } catch (error) {
       setMessage(error.message);
@@ -245,167 +235,354 @@ function App() {
   };
 
   if (loading) {
-    return <h2>Loading...</h2>;
+    return (
+      <main className="loading-page">
+        <div className="loader" />
+        <p>Loading CodeClash...</p>
+      </main>
+    );
   }
 
   if (!user) {
     return (
-      <main>
-        <h1>CodeClash AI</h1>
-        <h2>Login</h2>
+      <main className="auth-page">
+        <section className="auth-card">
+          <div className="brand brand-centered">
+            <div className="brand-mark">&lt;/&gt;</div>
 
-        <form onSubmit={handleLogin}>
-          <input
-            type="email"
-            placeholder="Email"
-            value={email}
-            onChange={(event) => setEmail(event.target.value)}
-            required
-          />
+            <div>
+              <h1>CodeClash AI</h1>
+              <p>Real-time AI-powered coding battles</p>
+            </div>
+          </div>
 
-          <input
-            type="password"
-            placeholder="Password"
-            value={password}
-            onChange={(event) => setPassword(event.target.value)}
-            required
-          />
+          <div className="auth-heading">
+            <span className="eyebrow">Welcome back</span>
+            <h2>Login to your account</h2>
+            <p>Enter the arena and challenge another developer.</p>
+          </div>
 
-          <button type="submit">Login</button>
-        </form>
+          <form className="auth-form" onSubmit={handleLogin}>
+            <label className="form-field">
+              <span>Email address</span>
 
-        {message && <p>{message}</p>}
+              <input
+                type="email"
+                placeholder="you@example.com"
+                value={email}
+                onChange={(event) => setEmail(event.target.value)}
+                required
+              />
+            </label>
+
+            <label className="form-field">
+              <span>Password</span>
+
+              <input
+                type="password"
+                placeholder="Enter your password"
+                value={password}
+                onChange={(event) => setPassword(event.target.value)}
+                required
+              />
+            </label>
+
+            <button className="btn btn-primary btn-full" type="submit">
+              Enter CodeClash
+            </button>
+          </form>
+
+          {message && <div className="message-banner">{message}</div>}
+        </section>
       </main>
     );
   }
 
   const isHost = battle && String(battle.players[0]?.user) === String(user.id);
 
+  const winnerName = battle?.winner?.username;
+
   return (
-    <main>
-      <h1>CodeClash AI</h1>
+    <main className="app-shell">
+      <header className="topbar">
+        <div className="brand">
+          <div className="brand-mark">&lt;/&gt;</div>
 
-      <p>Welcome, {user.username}</p>
+          <div>
+            <h1>CodeClash AI</h1>
+            <p>AI-powered coding arena</p>
+          </div>
+        </div>
 
-      <p>Socket status: {connected ? "Connected" : "Disconnected"}</p>
+        <div className="topbar-actions">
+          <div
+            className={`connection-status ${connected ? "online" : "offline"}`}
+          >
+            <span className="connection-dot" />
+            {connected ? "Live" : "Disconnected"}
+          </div>
+
+          <div className="user-chip">
+            <span className="user-avatar">
+              {user.username?.charAt(0).toUpperCase()}
+            </span>
+
+            <span>{user.username}</span>
+          </div>
+
+          <button className="btn btn-ghost" onClick={handleLogout}>
+            Logout
+          </button>
+        </div>
+      </header>
 
       {!battle && (
-        <section>
-          <button onClick={handleCreateBattle}>Create Battle</button>
+        <div className="page-container">
+          <section className="lobby-grid">
+            <article className="hero-card">
+              <span className="eyebrow">Competitive coding</span>
 
-          <h3>OR</h3>
+              <h2>
+                Code. Compete.
+                <span> Improve with AI.</span>
+              </h2>
 
-          <form onSubmit={handleJoinBattle}>
-            <input
-              type="text"
-              placeholder="Enter room code"
-              maxLength="6"
-              value={roomCodeInput}
-              onChange={(event) =>
-                setRoomCodeInput(event.target.value.toUpperCase())
-              }
-            />
+              <p>
+                Challenge another developer in a live coding battle. Execute
+                code, pass hidden test cases and use AI guidance when you get
+                stuck.
+              </p>
 
-            <button type="submit">Join Battle</button>
-          </form>
-        </section>
+              <div className="feature-list">
+                <div className="feature-item">
+                  <span>01</span>
+                  <div>
+                    <strong>Real-time battles</strong>
+                    <p>Compete live using Socket.IO rooms.</p>
+                  </div>
+                </div>
+
+                <div className="feature-item">
+                  <span>02</span>
+                  <div>
+                    <strong>Secure code judging</strong>
+                    <p>Submit solutions against hidden tests.</p>
+                  </div>
+                </div>
+
+                <div className="feature-item">
+                  <span>03</span>
+                  <div>
+                    <strong>AI coding coach</strong>
+                    <p>Get useful hints without full solutions.</p>
+                  </div>
+                </div>
+              </div>
+            </article>
+
+            <article className="lobby-card panel">
+              <span className="eyebrow">Battle lobby</span>
+              <h2>Start a coding battle</h2>
+              <p>
+                Create a new room or enter a room code shared by another player.
+              </p>
+
+              <button
+                className="btn btn-primary btn-full"
+                onClick={handleCreateBattle}
+              >
+                Create New Battle
+              </button>
+
+              <div className="divider">
+                <span>OR JOIN A ROOM</span>
+              </div>
+
+              <form className="join-form" onSubmit={handleJoinBattle}>
+                <input
+                  type="text"
+                  placeholder="ENTER CODE"
+                  maxLength="6"
+                  value={roomCodeInput}
+                  onChange={(event) =>
+                    setRoomCodeInput(event.target.value.toUpperCase())
+                  }
+                />
+
+                <button className="btn btn-secondary" type="submit">
+                  Join Battle
+                </button>
+              </form>
+
+              {message && <div className="message-banner">{message}</div>}
+            </article>
+          </section>
+        </div>
       )}
 
       {battle && (
-        <section>
-          <h2>Room: {battle.roomCode}</h2>
+        <div className="battle-container">
+          <section className="battle-summary panel">
+            <div className="room-info">
+              <span className="eyebrow">Battle room</span>
 
-          <p>Status: {battle.status}</p>
+              <div className="room-title-row">
+                <h2>{battle.roomCode}</h2>
 
-          {battle.winner?.username && <h3>Winner: {battle.winner.username}</h3>}
+                <span className={`status-badge status-${battle.status}`}>
+                  {battle.status}
+                </span>
+              </div>
+            </div>
 
-          <h3>Players</h3>
+            <div className="players-row">
+              {battle.players.map((player, index) => (
+                <div className="player-chip" key={player.user}>
+                  <span className="player-avatar">
+                    {player.username.charAt(0).toUpperCase()}
+                  </span>
 
-          <ul>
-            {battle.players.map((player, index) => (
-              <li key={player.user}>
-                {player.username}
-                {index === 0 ? " (Host)" : ""}
-              </li>
-            ))}
-          </ul>
+                  <div>
+                    <strong>{player.username}</strong>
+                    <span>{index === 0 ? "Host" : "Challenger"}</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </section>
+
+          {winnerName && (
+            <section className="winner-banner">
+              <span className="winner-icon">🏆</span>
+
+              <div>
+                <span>Battle completed</span>
+                <h2>{winnerName} won the battle!</h2>
+              </div>
+            </section>
+          )}
 
           {battle.status === "waiting" && (
-            <>
+            <section className="waiting-card panel">
+              <div className="waiting-animation">
+                <span />
+                <span />
+                <span />
+              </div>
+
+              <span className="eyebrow">Waiting room</span>
+
+              <h2>
+                {battle.players.length < 2
+                  ? "Waiting for an opponent"
+                  : "Both players are ready"}
+              </h2>
+
               <p>
                 {battle.players.length < 2
-                  ? "Waiting for opponent..."
-                  : "Both players joined!"}
+                  ? `Share room code ${battle.roomCode} with your opponent.`
+                  : isHost
+                    ? "Start the battle when you are ready."
+                    : "Waiting for the host to start the battle."}
               </p>
 
-              {isHost ? (
+              {isHost && (
                 <button
+                  className="btn btn-primary"
                   onClick={handleStartBattle}
                   disabled={battle.players.length !== 2}
                 >
                   Start Battle
                 </button>
-              ) : (
-                <p>Waiting for host to start...</p>
               )}
-            </>
-          )}
-
-          {battle.status === "active" && battle.problem && (
-            <section>
-              <h2>{battle.problem.title}</h2>
-
-              <p>Difficulty: {battle.problem.difficulty}</p>
-
-              <p>{battle.problem.description}</p>
-
-              <h3>Constraints</h3>
-
-              <ul>
-                {battle.problem.constraints.map((constraint, index) => (
-                  <li key={index}>{constraint}</li>
-                ))}
-              </ul>
-
-              <h3>Examples</h3>
-
-              {battle.problem.examples.map((example, index) => (
-                <div key={index}>
-                  <h4>Example {index + 1}</h4>
-
-                  <p>Input: {example.input}</p>
-
-                  <p>Output: {example.output}</p>
-
-                  {example.explanation && (
-                    <p>Explanation: {example.explanation}</p>
-                  )}
-                </div>
-              ))}
-
-              <h3>Code Editor</h3>
-
-              <CodeEditor
-                starterCode={battle.problem.starterCode}
-                language={language}
-                setLanguage={setLanguage}
-                code={code}
-                setCode={setCode}
-              />
-
-              <ExecutionPanel
-                language={language}
-                code={code}
-                roomCode={battle.roomCode}
-              />
             </section>
           )}
 
-          {message && <p>{message}</p>}
-        </section>
-      )}
+          {["active", "completed"].includes(battle.status) &&
+            battle.problem && (
+              <section className="battle-workspace">
+                <aside className="problem-panel panel">
+                  <div className="problem-header">
+                    <div>
+                      <span className="eyebrow">Problem</span>
+                      <h2>{battle.problem.title}</h2>
+                    </div>
 
-      <button onClick={handleLogout}>Logout</button>
+                    <span
+                      className={`difficulty-badge difficulty-${battle.problem.difficulty}`}
+                    >
+                      {battle.problem.difficulty}
+                    </span>
+                  </div>
+
+                  <p className="problem-description">
+                    {battle.problem.description}
+                  </p>
+
+                  <div className="problem-section">
+                    <h3>Constraints</h3>
+
+                    <ul className="constraint-list">
+                      {battle.problem.constraints.map((constraint, index) => (
+                        <li key={index}>{constraint}</li>
+                      ))}
+                    </ul>
+                  </div>
+
+                  <div className="problem-section">
+                    <h3>Examples</h3>
+
+                    <div className="examples-list">
+                      {battle.problem.examples.map((example, index) => (
+                        <article className="example-card" key={index}>
+                          <h4>Example {index + 1}</h4>
+
+                          <div className="example-row">
+                            <span>Input</span>
+                            <code>{example.input}</code>
+                          </div>
+
+                          <div className="example-row">
+                            <span>Output</span>
+                            <code>{example.output}</code>
+                          </div>
+
+                          {example.explanation && (
+                            <p>
+                              <strong>Explanation:</strong>{" "}
+                              {example.explanation}
+                            </p>
+                          )}
+                        </article>
+                      ))}
+                    </div>
+                  </div>
+                </aside>
+
+                <section className="coding-panel">
+                  <CodeEditor
+                    starterCode={battle.problem.starterCode}
+                    language={language}
+                    setLanguage={setLanguage}
+                    code={code}
+                    setCode={setCode}
+                  />
+
+                  <ExecutionPanel
+                    language={language}
+                    code={code}
+                    roomCode={battle.roomCode}
+                    battleStatus={battle.status}
+                  />
+                </section>
+              </section>
+            )}
+
+          {message && (
+            <div className="battle-message message-banner">{message}</div>
+          )}
+        </div>
+      )}
     </main>
   );
 }
