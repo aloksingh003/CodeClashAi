@@ -1103,3 +1103,26 @@ button {
     max-width: none;
   }
 }
+
+.auth-switch {
+  margin-top: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.link-button {
+  padding: 0;
+  border: 0;
+  color: #a78bfa;
+  background: transparent;
+  font-weight: 750;
+}
+
+.link-button:hover {
+  color: #c4b5fd;
+  text-decoration: underline;
+}

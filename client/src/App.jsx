@@ -28,6 +28,9 @@ const apiRequest = async (path, options = {}) => {
 };
 
 function App() {
+  const [isRegistering, setIsRegistering] = useState(false);
+  const [name, setName] = useState("");
+  const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
@@ -132,25 +135,61 @@ function App() {
     }
   };
 
-  const handleLogin = async (event) => {
+  const handleAuthentication = async (event) => {
     event.preventDefault();
     setMessage("");
 
     try {
-      const data = await apiRequest("/auth/login", {
-        method: "POST",
-        body: JSON.stringify({
-          email,
-          password,
-        }),
-      });
+      let data;
+
+      if (isRegistering) {
+        await apiRequest("/auth/register", {
+          method: "POST",
+          body: JSON.stringify({
+            name,
+            username,
+            email,
+            password,
+          }),
+        });
+
+        data = await apiRequest("/auth/login", {
+          method: "POST",
+          body: JSON.stringify({
+            email,
+            password,
+          }),
+        });
+      } else {
+        data = await apiRequest("/auth/login", {
+          method: "POST",
+          body: JSON.stringify({
+            email,
+            password,
+          }),
+        });
+      }
 
       setUser(data.user);
-      setMessage(data.message);
+
+      setMessage(
+        isRegistering
+          ? "Account created and logged in successfully"
+          : data.message,
+      );
+
       socket.connect();
     } catch (error) {
       setMessage(error.message);
     }
+  };
+
+  const toggleAuthenticationMode = () => {
+    setIsRegistering((currentValue) => !currentValue);
+    setName("");
+    setUsername("");
+    setPassword("");
+    setMessage("");
   };
 
   const handleLogout = async () => {
@@ -166,8 +205,11 @@ function App() {
       setRoomCodeInput("");
       setLanguage("cpp");
       setCode("");
+      setName("");
+      setUsername("");
       setEmail("");
       setPassword("");
+      setIsRegistering(false);
       setMessage(data.message);
     } catch (error) {
       setMessage(error.message);
@@ -257,12 +299,50 @@ function App() {
           </div>
 
           <div className="auth-heading">
-            <span className="eyebrow">Welcome back</span>
-            <h2>Login to your account</h2>
-            <p>Enter the arena and challenge another developer.</p>
+            <span className="eyebrow">
+              {isRegistering ? "Join the arena" : "Welcome back"}
+            </span>
+
+            <h2>
+              {isRegistering ? "Create your account" : "Login to your account"}
+            </h2>
+
+            <p>
+              {isRegistering
+                ? "Create an account and start competing with developers."
+                : "Enter the arena and challenge another developer."}
+            </p>
           </div>
 
-          <form className="auth-form" onSubmit={handleLogin}>
+          <form className="auth-form" onSubmit={handleAuthentication}>
+            {isRegistering && (
+              <>
+                <label className="form-field">
+                  <span>Full name</span>
+
+                  <input
+                    type="text"
+                    placeholder="Alok Singh"
+                    value={name}
+                    onChange={(event) => setName(event.target.value)}
+                    required
+                  />
+                </label>
+
+                <label className="form-field">
+                  <span>Username</span>
+
+                  <input
+                    type="text"
+                    placeholder="alok003"
+                    value={username}
+                    onChange={(event) => setUsername(event.target.value)}
+                    required
+                  />
+                </label>
+              </>
+            )}
+
             <label className="form-field">
               <span>Email address</span>
 
@@ -284,13 +364,28 @@ function App() {
                 value={password}
                 onChange={(event) => setPassword(event.target.value)}
                 required
+                minLength="6"
               />
             </label>
 
             <button className="btn btn-primary btn-full" type="submit">
-              Enter CodeClash
+              {isRegistering ? "Create Account" : "Enter CodeClash"}
             </button>
           </form>
+
+          <div className="auth-switch">
+            <span>
+              {isRegistering ? "Already have an account?" : "New to CodeClash?"}
+            </span>
+
+            <button
+              type="button"
+              className="link-button"
+              onClick={toggleAuthenticationMode}
+            >
+              {isRegistering ? "Login here" : "Create account"}
+            </button>
+          </div>
 
           {message && <div className="message-banner">{message}</div>}
         </section>
@@ -356,6 +451,7 @@ function App() {
               <div className="feature-list">
                 <div className="feature-item">
                   <span>01</span>
+
                   <div>
                     <strong>Real-time battles</strong>
                     <p>Compete live using Socket.IO rooms.</p>
@@ -364,6 +460,7 @@ function App() {
 
                 <div className="feature-item">
                   <span>02</span>
+
                   <div>
                     <strong>Secure code judging</strong>
                     <p>Submit solutions against hidden tests.</p>
@@ -372,6 +469,7 @@ function App() {
 
                 <div className="feature-item">
                   <span>03</span>
+
                   <div>
                     <strong>AI coding coach</strong>
                     <p>Get useful hints without full solutions.</p>
@@ -382,7 +480,9 @@ function App() {
 
             <article className="lobby-card panel">
               <span className="eyebrow">Battle lobby</span>
+
               <h2>Start a coding battle</h2>
+
               <p>
                 Create a new room or enter a room code shared by another player.
               </p>
@@ -444,6 +544,7 @@ function App() {
 
                   <div>
                     <strong>{player.username}</strong>
+
                     <span>{index === 0 ? "Host" : "Challenger"}</span>
                   </div>
                 </div>
@@ -505,6 +606,7 @@ function App() {
                   <div className="problem-header">
                     <div>
                       <span className="eyebrow">Problem</span>
+
                       <h2>{battle.problem.title}</h2>
                     </div>
 
