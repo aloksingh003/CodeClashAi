@@ -276,6 +276,19 @@ function App() {
     }
   };
 
+  const handleReturnToLobby = () => {
+    setBattle(null);
+    setRoomCodeInput("");
+    setLanguage("cpp");
+    setCode("");
+    setMessage("");
+
+    window.scrollTo({
+      top: 0,
+      behavior: "smooth",
+    });
+  };
+
   if (loading) {
     return (
       <main className="loading-page">
@@ -560,6 +573,13 @@ function App() {
                 <span>Battle completed</span>
                 <h2>{winnerName} won the battle!</h2>
               </div>
+
+              <button
+                className="btn btn-secondary return-lobby-button"
+                onClick={handleReturnToLobby}
+              >
+                Return to Lobby
+              </button>
             </section>
           )}
 

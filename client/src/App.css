@@ -1126,3 +1126,19 @@ button {
   color: #c4b5fd;
   text-decoration: underline;
 }
+
+.return-lobby-button {
+  margin-left: auto;
+  white-space: nowrap;
+}
+
+@media (max-width: 620px) {
+  .winner-banner {
+    flex-wrap: wrap;
+  }
+
+  .return-lobby-button {
+    width: 100%;
+    margin-left: 0;
+  }
+}
