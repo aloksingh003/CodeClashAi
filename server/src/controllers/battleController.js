@@ -136,31 +136,75 @@ const startBattle = async (req, res) => {
       });
     }
 
-    const problemCount = await Problem.countDocuments({
-      isActive: true,
-    });
+    const totalActiveProblems =
+      await Problem.countDocuments({
+        isActive: true,
+      });
 
-    if (problemCount === 0) {
+    if (totalActiveProblems === 0) {
       return res.status(404).json({
         success: false,
         message: "No coding problems are available",
       });
     }
 
+    // Get the problem used in the latest battle.
+    const previousBattle = await Battle.findOne({
+      problem: {
+        $ne: null,
+      },
+      _id: {
+        $ne: battle._id,
+      },
+    })
+      .sort({
+        startedAt: -1,
+      })
+      .select("problem");
+
+    const problemFilter = {
+      isActive: true,
+    };
+
+    // Avoid selecting the previous problem again.
+    if (
+      previousBattle?.problem &&
+      totalActiveProblems > 1
+    ) {
+      problemFilter._id = {
+        $ne: previousBattle.problem,
+      };
+    }
+
+    const availableProblemCount =
+      await Problem.countDocuments(problemFilter);
+
     const randomIndex = Math.floor(
-      Math.random() * problemCount
+      Math.random() * availableProblemCount
     );
 
-    const problem = await Problem.findOne({
-      isActive: true,
-    }).skip(randomIndex);
+    const problem = await Problem.findOne(problemFilter)
+      .select("_id")
+      .skip(randomIndex);
+
+    if (!problem) {
+      return res.status(404).json({
+        success: false,
+        message: "Unable to select a coding problem",
+      });
+    }
 
     battle.problem = problem._id;
     battle.status = "active";
     battle.startedAt = new Date();
 
     await battle.save();
-    await battle.populate("problem");
+
+    // Explicitly prevent hidden test cases from reaching frontend.
+    await battle.populate({
+      path: "problem",
+      select: "-testCases",
+    });
 
     const battleData = {
       roomCode: battle.roomCode,
