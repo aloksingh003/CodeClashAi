@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import socket from "./socket";
 import CodeEditor from "./components/CodeEditor";
+import ExecutionPanel from "./components/ExecutionPanel";
 import "./App.css";
 
 const API_URL = "http://localhost:5000/api";
@@ -355,6 +356,8 @@ function App() {
                 code={code}
                 setCode={setCode}
               />
+
+              <ExecutionPanel language={language} code={code} />
             </section>
           )}
 
