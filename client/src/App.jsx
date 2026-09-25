@@ -356,8 +356,11 @@ function App() {
                 code={code}
                 setCode={setCode}
               />
-
-              <ExecutionPanel language={language} code={code} />
+              <ExecutionPanel
+                language={language}
+                code={code}
+                roomCode={battle.roomCode}
+              />
             </section>
           )}
 
