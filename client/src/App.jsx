@@ -1,7 +1,9 @@
 import { useEffect, useState } from "react";
+
 import socket from "./socket";
 import CodeEditor from "./components/CodeEditor";
 import ExecutionPanel from "./components/ExecutionPanel";
+
 import "./App.css";
 
 const API_URL = "http://localhost:5000/api";
@@ -10,6 +12,7 @@ const apiRequest = async (path, options = {}) => {
   const response = await fetch(`${API_URL}${path}`, {
     credentials: "include",
     ...options,
+
     headers: {
       "Content-Type": "application/json",
       ...(options.headers || {}),
@@ -27,7 +30,9 @@ const apiRequest = async (path, options = {}) => {
 
 function App() {
   const [email, setEmail] = useState("aloktest01@example.com");
+
   const [password, setPassword] = useState("test123");
+
   const [user, setUser] = useState(null);
   const [connected, setConnected] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -60,8 +65,27 @@ function App() {
     const handleBattleStarted = (startedBattle) => {
       setBattle(startedBattle);
       setLanguage("cpp");
+
       setCode(startedBattle.problem?.starterCode?.cpp || "");
+
       setMessage("Battle started!");
+    };
+
+    const handleBattleCompleted = (result) => {
+      setBattle((currentBattle) => {
+        if (!currentBattle || currentBattle.roomCode !== result.roomCode) {
+          return currentBattle;
+        }
+
+        return {
+          ...currentBattle,
+          status: result.status,
+          winner: result.winner,
+          endedAt: result.endedAt,
+        };
+      });
+
+      setMessage(`Battle completed! Winner: ${result.winner.username}`);
     };
 
     socket.on("connect", handleConnect);
@@ -71,6 +95,8 @@ function App() {
     socket.on("battle_room_updated", handleBattleUpdate);
 
     socket.on("battle_started", handleBattleStarted);
+
+    socket.on("battle_completed", handleBattleCompleted);
 
     const checkAuthentication = async () => {
       try {
@@ -95,6 +121,8 @@ function App() {
       socket.off("battle_room_updated", handleBattleUpdate);
 
       socket.off("battle_started", handleBattleStarted);
+
+      socket.off("battle_completed", handleBattleCompleted);
     };
   }, []);
 
@@ -120,6 +148,7 @@ function App() {
     try {
       const data = await apiRequest("/auth/login", {
         method: "POST",
+
         body: JSON.stringify({
           email,
           password,
@@ -141,6 +170,7 @@ function App() {
       });
 
       socket.disconnect();
+
       setUser(null);
       setBattle(null);
       setRoomCodeInput("");
@@ -205,7 +235,9 @@ function App() {
 
       setBattle(data.battle);
       setLanguage("cpp");
+
       setCode(data.battle.problem?.starterCode?.cpp || "");
+
       setMessage(data.message);
     } catch (error) {
       setMessage(error.message);
@@ -285,6 +317,8 @@ function App() {
 
           <p>Status: {battle.status}</p>
 
+          {battle.winner?.username && <h3>Winner: {battle.winner.username}</h3>}
+
           <h3>Players</h3>
 
           <ul>
@@ -338,7 +372,9 @@ function App() {
               {battle.problem.examples.map((example, index) => (
                 <div key={index}>
                   <h4>Example {index + 1}</h4>
+
                   <p>Input: {example.input}</p>
+
                   <p>Output: {example.output}</p>
 
                   {example.explanation && (
@@ -356,6 +392,7 @@ function App() {
                 code={code}
                 setCode={setCode}
               />
+
               <ExecutionPanel
                 language={language}
                 code={code}

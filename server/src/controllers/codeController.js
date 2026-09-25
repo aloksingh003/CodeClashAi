@@ -236,20 +236,43 @@ const submitCode = async (req, res) => {
       });
     }
 
-    res.status(200).json({
-      success: true,
-      accepted: true,
-      verdict: "Accepted",
-      passedTests,
-      totalTests: problem.testCases.length,
-      message: "All test cases passed. You won!",
-      battle: {
-        roomCode: completedBattle.roomCode,
-        status: completedBattle.status,
-        winner: completedBattle.winner,
-        endedAt: completedBattle.endedAt,
-      },
-    });
+   const winnerPlayer = completedBattle.players.find(
+  (player) =>
+    player.user.toString() === req.user._id.toString()
+);
+
+const battleResult = {
+  roomCode: completedBattle.roomCode,
+
+  status: completedBattle.status,
+
+  winner: {
+    id: req.user._id,
+    username:
+      winnerPlayer?.username || req.user.username,
+  },
+
+  endedAt: completedBattle.endedAt,
+};
+
+const io = req.app.get("io");
+
+if (io) {
+  io.to(normalizedRoomCode).emit(
+    "battle_completed",
+    battleResult
+  );
+}
+
+res.status(200).json({
+  success: true,
+  accepted: true,
+  verdict: "Accepted",
+  passedTests,
+  totalTests: problem.testCases.length,
+  message: "All test cases passed. You won!",
+  battle: battleResult,
+}); 
   } catch (error) {
     console.error(`Submit code error: ${error.message}`);
 
